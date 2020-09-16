@@ -1,12 +1,12 @@
 [![Teledyne Logo](images/TeledyneLogo.png)](teledynemarine.com)
 
-<table><tr align="center"><td valign="middle" width="20%"><img src="images/wayfinder.png" alt="Wayfinder DVL" height="100"></td><td width="70%"><h1> Wayfinder DVL </h1></td><td width="10%"><a href="https://teledynerdi.myshopify.com/">Shopify Link</a></td></tr></table>
+<table><tr align="center" style="border: none;"><td valign="middle" width="20%" style="border: none;"><img src="images/wayfinder.png" alt="Wayfinder DVL" width="93" height="107"></td><td width="70%" style="border: none;"><h1> Wayfinder DVL </h1></td><td width="10%" style="border: none;"><a href="https://teledynerdi.myshopify.com/">Wayfinder Store</a></td></tr></table>
 
 # Wayfinder Python Driver
-Python driver for Wayfinder DVL  
-Contains sample code for python drivers
+Python driver for communication with a Wayfinder DVL  
 
 Contents  
+* [Documentation](https://github.com/Teledyne-Marine/Wayfinder#Documentation)  
 * [Sample code](https://github.com/Teledyne-Marine/Wayfinder#Sample-code)  
 * [Installation](https://github.com/Teledyne-Marine/Wayfinder#Installation)  
 * [Requirements](https://github.com/Teledyne-Marine/Wayfinder#Requirements)  
@@ -14,15 +14,15 @@ Contents
 * [Links](https://github.com/Teledyne-Marine/Wayfinder#Links)  
 * [Contact](https://github.com/Teledyne-Marine/Wayfinder#Contact)  
 
+
+## Documentation
+Full documentation for the driver is available [here](https://teledynerdi.myshopify.com/pages/wayfinder-driver-index)
+
 ## Sample code
 Samples of how to use the driver can be found in the `examples` directory
 
 ## Installation
-To install dependencies, cd to the `Wayfinder Tools` directory and use `pip`
-
-    $ pip install -r requirements.txt
-
-To install the `dvl` module, cd to the `Python drivers` directory and use `pip`
+To install the `dvl` module, cd to the `dvl` directory and use `pip`
 
     $ pip install .
 
@@ -50,7 +50,7 @@ To run Wayfinder Tools, cd to the `Wayfinder Tools` folder and send
 Follow instructions in the manual to connect and communicate with the device
 
 ## Links
-[Shopify link](https://teledynerdi.myshopify.com/)
+[Wayfinder Store](https://teledynerdi.myshopify.com/)
 
 ## Contact
 ![Tele icon](images/phone_icon.png) +1-858-842-2700  
