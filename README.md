@@ -43,6 +43,8 @@ To install the `dvl` module, cd to the `dvl` directory and use `pip`
 ## Usage
 To connect to the Wayfinder DVL and then retrieve the setup and print it:
 
+    from dvl.dvl import Dvl
+
     with Dvl() as DVL:
 
         # Connect to serial port on COM1
