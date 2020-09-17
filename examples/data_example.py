@@ -20,6 +20,12 @@ if __name__ == "__main__":
     with Dvl(PORT, 115200) as DVL:
 
         if DVL.is_connected():
+
+            # Get user system setup
+            if DVL.get_setup():
+                # Print setup 
+                print (DVL.system_setup)
+
             # Stop pinging
             if not DVL.enter_command_mode():
                 print("Failed to stop pinging")

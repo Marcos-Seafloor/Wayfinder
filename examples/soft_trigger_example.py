@@ -17,14 +17,17 @@ if __name__ == "__main__":
     PORT = input("Please enter your port number (e.g. '1' for COM1) =  ")
     PORT = "COM" + PORT
 
-    # Connect to serial port
+    # Initialize Dvl class
     with Dvl() as DVL:
-
+        
+        # Connect to serial port
         if DVL.connect(PORT):
             # Get user system setup
             if not DVL.get_setup():
                 print("Failed to get system setup")
             else:
+                # Print setup 
+                print (DVL.system_setup)
 
                 # Modify system setup structure to set software trigger
                 SETUP = DVL.system_setup
@@ -61,3 +64,4 @@ if __name__ == "__main__":
 
         else:
             print("Failed to open {0} - make sure it is not used by any other program".format(PORT))
+
