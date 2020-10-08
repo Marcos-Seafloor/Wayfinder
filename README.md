@@ -20,8 +20,10 @@ The Wayfinder Doppler Velocity Log (DVL) is an underwater sensor that has been d
 <img src="images/wayfinder.png" alt="Wayfinder DVL" width="186" height="214">
 
 ## Documentation
-Full documentation for the **product** is available [here](https://teledynerdi.myshopify.com#Documentation)
-Full documentation for the **driver** is available [here](https://teledynerdi.myshopify.com/pages/wayfinder-driver-index)
+
+* Full documentation for the **product** is available [here](https://teledynerdi.myshopify.com#Documentation)
+
+* Full documentation for the **driver** is available [here](https://teledynerdi.myshopify.com/pages/wayfinder-driver-index)
 
 ## Sample code
 Samples of how to use the driver can be found in the `examples` directory
