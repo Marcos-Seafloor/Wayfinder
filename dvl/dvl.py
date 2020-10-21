@@ -3,7 +3,8 @@
 import datetime
 from dvl.packets import AppLayerPacket
 from dvl.commands import BinaryCommands, check_response
-from dvl.system import SystemInfo, SystemFeatures, SystemSetup, SystemTests, FftData
+from dvl.system import SystemInfo, SystemComponents, SystemFeatures, SystemSetup, \
+    SystemTests, FftData
 from dvl.commands import ResponseStatusType, CommandIdType
 
 class Dvl():
@@ -17,6 +18,7 @@ class Dvl():
         self._system_tests = SystemTests()
         self._system_setup = SystemSetup()
         self._system_info = SystemInfo()
+        self._system_components = SystemComponents()
         self._system_features = SystemFeatures()
         self._fft_data = FftData(None)
         self._is_connected = False
@@ -26,7 +28,7 @@ class Dvl():
         """Path to working folder where data will be stored."""
         self.log_file_name = None
         """Automatically generated file name when data logging starts."""
-        self.log_all_data = False
+        self.log_all_data = True
         """Flag to turn on logging of all data for debugging purposes."""
         self.time_diff = 0
         """Time different between system time and PC time."""
@@ -48,6 +50,11 @@ class Dvl():
     def system_info(self) -> SystemInfo:
         """After successful call to get_system results are stored in here."""
         return self._system_info
+
+    @property
+    def system_components(self) -> SystemComponents:
+        """After successful call to get_components results are stored in here."""
+        return self._system_components
 
     @property
     def system_setup(self) -> SystemSetup:
@@ -87,6 +94,7 @@ class Dvl():
         self._system_tests = SystemTests()
         self._system_setup = SystemSetup()
         self._system_info = SystemInfo()
+        self._system_componets = SystemComponents()
         self._system_features = SystemFeatures()
         self._fft_data = FftData(None)
         self.last_err = ResponseStatusType.SUCCESS
@@ -302,7 +310,22 @@ class Dvl():
         if self.last_err.value == ResponseStatusType.SUCCESS.value:
             self._system_info = result
             return True
-        self._system_setup = SystemInfo()
+        self._system_info = SystemInfo()
+        return False
+
+    def get_components(self) -> bool:
+        """Gets hardware components information.  The results are in system_components.
+
+        Returns
+        -------
+        bool
+            True if successful, False otherwise.
+        """
+        (self.last_err, result) = self._commands.get_components()
+        if self.last_err.value == ResponseStatusType.SUCCESS.value:
+            self._system_components = result
+            return True
+        self._system_components = SystemComponents()
         return False
 
     def get_fft_test(self) -> bool:

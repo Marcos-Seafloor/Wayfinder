@@ -1,6 +1,7 @@
 """Contains several utilities classes.
 """
 import math
+import threading
 import datetime
 import os.path
 from threading import Thread
@@ -52,6 +53,7 @@ class Setting:
         else:
             self.value_string = self.format.format(value)
 
+
 class SerialPort():
     """Class responsible for serial communications.
 
@@ -62,7 +64,8 @@ class SerialPort():
     baud_rate : int
         Baud-rate to use when opening the port.
     """
-    _THREAD_DELAY = 0.005
+    #pylint: disable=too-many-instance-attributes
+    _THREAD_DELAY = 0.01
 
     def __init__(self, com="COM1", baud_rate=115200):
         self.com = com
@@ -75,15 +78,24 @@ class SerialPort():
         self._receive_callback = []
         self._run = False
         self._thread = None
+        self._lock = threading.Lock()
 
     def __enter__(self):
         """Opens port on enter.
         """
         self.close()
         try:
-            self._port = serial.Serial(self.com, self.baudrate)
+            com = self.com
+            if com.startswith("COM"):
+                com = "\\\\.\\"+ com
+            self._port = serial.Serial(com, self.baudrate)
+            self._port.setDTR(True)
+            self._port.setRTS(True)
+            self._port.writeTimeout = 1
+
         except serial.SerialException:
-            pass
+            self._port = None
+
         if (self._port is not None) and self._port.isOpen() and not self._run:
             self._run = True
             self._thread = Thread(target=self._receive_listener, name="Wayfinder serial thread")
@@ -146,7 +158,11 @@ class SerialPort():
             The byte array to be written to serial port.
         """
         if self._port is not None and self._port.isOpen():
-            self._port.write(array)
+            with self._lock:
+                try:
+                    self._port.write(array)
+                except serial.SerialException:
+                    pass
 
     def register_receive_callback(self, function):
         """Registers receive callback function.
@@ -170,8 +186,9 @@ class SerialPort():
             if self._port.isOpen():
                 bytes_to_read = self._port.inWaiting()
                 if bytes_to_read > 0:
-                    arr = self._port.read(bytes_to_read)
-                    if self._run:
+                    with self._lock:
+                        arr = self._port.read_all()
+                    if self._run and len(arr) > 0:
                         for func in self._receive_callback:
                             func(arr)
             sleep(SerialPort._THREAD_DELAY)

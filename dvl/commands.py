@@ -7,7 +7,7 @@ from queue import Queue, Empty
 from dvl.packets import PhysicalLayerPacket, AppLayerPacket, PacketDecoder, AppLayerIdType
 from dvl.util import DataLogger, SerialPort
 from dvl.system import SystemInfo, SystemFeatures, SystemSetup, SystemTests,\
-   SystemUpdate, DateTime, FftTest, OutputData, FftData
+   SystemComponents, SystemUpdate, DateTime, FftTest, OutputData, FftData
 
 class CommandIdType(Enum):
     """Enumerated type class that defines command IDs.
@@ -46,6 +46,10 @@ class CommandIdType(Enum):
     """Start firmware update command ID."""
     UPLOAD_FILE = 0x22000002
     """Upload firmware file command ID."""
+    GET_COMPONENTS = 0x81000003
+    """Get hardware components information command ID."""
+    SET_COMPONENTS = 0x83000004
+    """Set hardware components information (internal only) command ID."""
 
 class ResponseStatusType(Enum):
     """Enumerated type class that defines command response status.
@@ -319,6 +323,16 @@ class BinaryCommands(Communicator):
         if err.value != ResponseStatusType.SUCCESS.value:
             return (err, None)
         info = SystemInfo()
+        info.decode(response)
+        return (err, info)
+
+    def get_components(self):
+        """Gets DVL hardware components information.
+        """
+        (err, response) = self.send_cmd(CommandIdType.GET_COMPONENTS)
+        if err.value != ResponseStatusType.SUCCESS.value:
+            return (err, None)
+        info = SystemComponents()
         info.decode(response)
         return (err, info)
 

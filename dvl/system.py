@@ -89,8 +89,6 @@ class SystemInfo:
     _VERSION = 0x10
     _SIZE = 135
     _OFFSET = 6
-    _NUM_HARDWARE = 4
-    _HARDWARE_OFFSET = 33
 
     def __init__(self):
         self.is_valid = False
@@ -121,28 +119,12 @@ class SystemInfo:
         """Beam angle in degrees (for Wayfinder 30 deg)."""
         self.has_vertical_beam = False
         """Defines if vertical beam is present."""
-        self.num_hardware = 0
-        """ Number of hardware boards."""
-        self.hardware_pn = []
-        """List of part numbers for hardware."""
-        self.hardware_sn = []
-        """List of serial numbers for hardware."""
-        for _ in range(SystemInfo._NUM_HARDWARE):
-            self.hardware_pn.append(b"-")
-            self.hardware_sn.append(b"-")
-
         self.system_type = 76
         """System type (for Wayfinder 76)."""
         self.system_subtype = 0
         """System sub-type (for Wayfinder 0)."""
 
     def __str__(self):
-        boards = ""
-        for part_number, serial_number in zip(self.hardware_pn, self.hardware_sn):
-            boards += "{0} : {1}\n".format(
-                str(part_number, encoding="utf-8", errors="replace"),
-                str(serial_number, encoding="utf-8", errors="replace")
-            )
         return (
             "System Info\n"
             "-----------\n"
@@ -156,9 +138,6 @@ class SystemInfo:
             "Transducer Type  : {10}\n"
             "Beam Angle       : {11} degrees\n"
             "Vertical Beam    : {12}\n"
-            "Components       : {13}\n"
-            "Boards           :\n"
-            "{14}"
         ).format(
             self.struct_id,
             self.version,
@@ -173,19 +152,11 @@ class SystemInfo:
             self.xducer_type,
             self.beam_angle,
             self.has_vertical_beam,
-            self.num_hardware,
-            indent_string(boards)
         )
 
     def to_string(self):
         """Outputs information to string for logging
         """
-        boards = ""
-        for part_number, serial_number in zip(self.hardware_pn, self.hardware_sn):
-            boards += "{0}, {1}\n".format(
-                str(part_number, encoding="utf-8", errors="replace"),
-                str(serial_number, encoding="utf-8", errors="replace")
-            )
         return (
             "System Info\n"
             "-----------\n"
@@ -196,8 +167,6 @@ class SystemInfo:
             "Transducer Type  : {}\n"
             "Beam Angle       : {} degrees\n"
             "Vertical Beam    : {}\n"
-            "Boards           :\n"
-            "{}\n\n"
         ).format(
             self.frequency,
             self.get_fw_version(),
@@ -205,8 +174,7 @@ class SystemInfo:
             self.system_id,
             self.xducer_type,
             self.beam_angle,
-            self.has_vertical_beam,
-            indent_string(boards)
+            self.has_vertical_beam
         )
     def decode(self, packet: AppLayerPacket):
         """Decodes system info from application layer packet.
@@ -237,16 +205,7 @@ class SystemInfo:
             self.has_vertical_beam = False
             if arr[31] > 0:
                 self.has_vertical_beam = True
-            self.num_hardware = arr[32]
-            offset = SystemInfo._HARDWARE_OFFSET
-            self.hardware_pn = []
-            self.hardware_sn = []
-            if self.num_hardware <= SystemInfo._NUM_HARDWARE:
-                for _ in range(SystemInfo._NUM_HARDWARE):
-                    limit = offset+19
-                    self.hardware_pn.append(arr[offset:limit])
-                    self.hardware_sn.append(arr[limit:limit+6])
-                    offset = limit+6
+
             if self.size == SystemInfo._SIZE:
                 self.system_type = arr[133]
                 self.system_subtype = arr[134]
@@ -281,40 +240,187 @@ class SystemInfo:
         setting = Setting(3, "System ID", self.system_id, "0x{:016X}")
         settings.append(setting)
 
-        setting = Setting(4, "CPU part number", self._get_hardware_pn_string(0), "{0:19s}")
+        if not self.is_valid:
+            for setting in settings:
+                setting.value_string = "-"
+
+        return settings
+
+class SystemComponents:
+    """Class that contains system hardware components information.
+    """
+    #pylint: disable=too-many-instance-attributes
+
+    _STRUCTURE_ID = 0x29
+    _VERSION = 0x10
+    _SIZE = 133
+    _OFFSET = 6
+    _NUM_HARDWARE = 4
+
+    def __init__(self):
+        self.is_valid = False
+        """Defines if data in the class are valid (i.e. they are decoded properly)"""
+        self.struct_id = SystemComponents._STRUCTURE_ID
+        """Structure ID number."""
+        self.version = SystemComponents._VERSION
+        """Structure version number."""
+        self.size = SystemComponents._SIZE
+        """Structure size."""
+        self.num_hardware = 0
+        """ Number of hardware boards."""
+        self.hardware_pn = []
+        """List of part numbers for hardware."""
+        self.hardware_rev = []
+        """List of revision numbers for hardware."""
+        self.hardware_sn = []
+        """List of serial numbers for hardware."""
+        for _ in range(self._NUM_HARDWARE):
+            self.hardware_pn.append("")
+            self.hardware_rev.append("")
+            self.hardware_sn.append("")
+
+    def __str__(self):
+        boards = ""
+        for i in range(self._NUM_HARDWARE):
+            boards += "{0}{1} : {2}\n".format(self.hardware_pn[i],\
+                self.hardware_rev[i], self.hardware_sn[i])
+        return (
+            "System Components\n"
+            "-----------\n"
+            "Structure ID     : 0x{0:02X}       ({0})\n"
+            "Version          : 0x{1:02X}       ({1})\n"
+            "Size             : 0x{2:08X} ({2})\n"
+            "Components       : {3}\n"
+            "Boards           :\n"
+            "{4}"
+        ).format(
+            self.struct_id,
+            self.version,
+            self.size,
+            self.num_hardware,
+            indent_string(boards)
+        )
+
+    def to_string(self):
+        """Outputs information to string for logging
+        """
+        boards = ""
+        for i in range(self._NUM_HARDWARE):
+            boards += "{0}{1} : {2}\n".format(self.hardware_pn[i],\
+                self.hardware_rev[i], self.hardware_sn[i])
+        return (
+            "System Components\n"
+            "-----------\n"
+            "Components       : {}\n"
+            "Boards           :\n"
+            "{}\n"
+        ).format(
+            self.num_hardware,
+            indent_string(boards)
+        )
+
+    def decode(self, packet: AppLayerPacket):
+        """Decodes system info from application layer packet.
+        """
+        arr = packet.get_payload()
+        self.decode_from_array(arr)
+
+    def decode_from_array(self, arr: bytearray):
+        """Decodes system info from byte array.
+        """
+        length = len(arr)
+        if length < SystemComponents._SIZE + SystemComponents._OFFSET - 2:
+            return
+        arr = arr[SystemComponents._OFFSET:]
+        try:
+            self.struct_id = arr[0]
+            self.version = arr[1]
+            [self.size] = struct.unpack("I", arr[2:6])
+            self.num_hardware = arr[6]
+            offset = 7
+            self.hardware_pn = []
+            self.hardware_rev = []
+            self.hardware_sn = []
+            if self.num_hardware == SystemComponents._NUM_HARDWARE:
+                for _ in range(SystemComponents._NUM_HARDWARE):
+                    limit = offset+32
+                    data = arr[offset:limit]
+                    data_bin = data.strip(b'\x00').split(b"\x00")
+                    if len(data_bin) >= 3:
+                        self.hardware_pn.append(data_bin[0].decode("utf-8", errors='ignore'))
+                        self.hardware_rev.append(data_bin[1].decode("utf-8", errors='ignore'))
+                        self.hardware_sn.append(data_bin[2].decode("utf-8", errors='ignore'))
+                    offset = limit
+
+            self.is_valid = True
+
+        except ValueError:
+            self.is_valid = False
+
+    def get_index(self, string):
+        """Returns index of string in part number.
+        """
+        for i in range(len(self.hardware_pn)):
+            if string in self.hardware_pn[i]:
+                return i
+        return 0
+
+    def get_settings(self):
+        """Returns system info in form of settings.
+        """
+        settings = []
+
+        cpu = self.get_index("CPU")
+        xdr = self.get_index("XDR")
+        dsc = self.get_index("DSC")
+        sys = self.get_index("SYS")
+
+        setting = Setting(0, "CPU part number", self.hardware_pn[cpu][3:], "{0:11s}")
         settings.append(setting)
 
-        setting = Setting(5, "XDR part number", self._get_hardware_pn_string(1), "{0:19s}")
+        setting = Setting(1, "XDR part number", self.hardware_pn[xdr][3:], "{0:11s}")
         settings.append(setting)
 
-        setting = Setting(6, "DSC part number", self._get_hardware_pn_string(2), "{0:19s}")
+        setting = Setting(2, "DSC part number", self.hardware_pn[dsc][3:], "{0:11s}")
         settings.append(setting)
 
-        setting = Setting(7, "SYS part number", self._get_hardware_pn_string(3), "{0:19s}")
+        setting = Setting(3, "SYS part number", self.hardware_pn[sys][3:], "{0:11s}")
         settings.append(setting)
 
-        setting = Setting(8, "CPU serial number", self._get_hardware_sn_string(0), "{0:6s}")
+        setting = Setting(4, "CPU revision", self.hardware_rev[cpu], "{0:4s}")
         settings.append(setting)
 
-        setting = Setting(9, "XDR serial number", self._get_hardware_sn_string(1), "{0:6s}")
+        setting = Setting(5, "XDR revision", self.hardware_rev[xdr], "{0:4s}")
         settings.append(setting)
 
-        setting = Setting(10, "DSC serial number", self._get_hardware_sn_string(2), "{0:6s}")
+        setting = Setting(6, "DSC revision", self.hardware_rev[dsc], "{0:4s}")
         settings.append(setting)
 
-        setting = Setting(11, "SYS serial number", self._get_hardware_sn_string(3), "{0:6s}")
+        setting = Setting(7, "SYS revision", self.hardware_rev[sys], "{0:4s}")
         settings.append(setting)
 
-        setting = Setting(12, "CPU", self._get_hardware_pn_sn_string(0), "{0:s}")
+        setting = Setting(8, "CPU serial number", self.hardware_sn[cpu], "{0:10s}")
         settings.append(setting)
 
-        setting = Setting(13, "XDR", self._get_hardware_pn_sn_string(1), "{0:s}")
+        setting = Setting(9, "XDR serial number", self.hardware_sn[xdr], "{0:6s}")
         settings.append(setting)
 
-        setting = Setting(14, "DSC", self._get_hardware_pn_sn_string(2), "{0:s}")
+        setting = Setting(10, "DSC serial number", self.hardware_sn[dsc], "{0:10s}")
         settings.append(setting)
 
-        setting = Setting(15, "SYS", self._get_hardware_pn_sn_string(3), "{0:s}")
+        setting = Setting(11, "SYS serial number", self.hardware_sn[sys], "{0:6s}")
+        settings.append(setting)
+
+        setting = Setting(12, "CPU", self._get_hardware_pn_sn_string(cpu), "{0:s}")
+        settings.append(setting)
+
+        setting = Setting(13, "XDR", self._get_hardware_pn_sn_string(xdr), "{0:s}")
+        settings.append(setting)
+
+        setting = Setting(14, "DSC", self._get_hardware_pn_sn_string(dsc), "{0:s}")
+        settings.append(setting)
+
+        setting = Setting(15, "SYS", self._get_hardware_pn_sn_string(sys), "{0:s}")
         settings.append(setting)
 
         if not self.is_valid:
@@ -323,22 +429,9 @@ class SystemInfo:
 
         return settings
 
-    def _get_hardware_pn_string(self, num):
-        try:
-            value = self.hardware_pn[num].decode("utf-8")
-        except UnicodeDecodeError:
-            value = "-"
-        return value
-
-    def _get_hardware_sn_string(self, num):
-        try:
-            value = self.hardware_sn[num].decode("utf-8")
-        except UnicodeDecodeError:
-            value = "-"
-        return value
-
     def _get_hardware_pn_sn_string(self, num):
-        return self._get_hardware_pn_string(num) + " / " + self._get_hardware_sn_string(num)
+        return self.hardware_pn[num] + self.hardware_rev[num] + " / " + self.hardware_sn[num]
+
 
 class SystemFeatures:
     """Class that contains system features results.
@@ -908,7 +1001,7 @@ class OutputData:
         else:
             start = 83
             try:
-                value = arr[77:83].decode("utf-8")
+                value = arr[77:83].decode("utf-8", errors='ignore')
             except UnicodeDecodeError:
                 value = "0"
             self.serial_number = value
@@ -1336,7 +1429,13 @@ class SystemInfoIdType(Enum):
     """FPGA version."""
     SYSTEM_ID = auto()
     """System ID."""
-    CPU_PN = auto()
+
+
+class ComponentsIdType(Enum):
+    """Enumerated type class that defines hardware components IDs.
+       Used with list of settings for display.
+    """
+    CPU_PN = 0
     """CPU part number."""
     XDR_PN = auto()
     """XDR part number."""
@@ -1344,6 +1443,14 @@ class SystemInfoIdType(Enum):
     """DSC part number."""
     SYS_PN = auto()
     """SYS part number."""
+    CPU_REV = auto()
+    """CPU revision number."""
+    XDR_REV = auto()
+    """XDR revision number."""
+    DSC_REV = auto()
+    """DSC revision number."""
+    SYS_REV = auto()
+    """SYS revision number."""
     CPU_SN = auto()
     """CPU serial number."""
     XDR_SN = auto()
