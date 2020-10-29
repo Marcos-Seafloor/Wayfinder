@@ -9,6 +9,7 @@ Contents
 * [Documentation](https://github.com/Teledyne-Marine/Wayfinder#Documentation)  
 * [Sample code](https://github.com/Teledyne-Marine/Wayfinder#Sample-code)  
 * [Installation](https://github.com/Teledyne-Marine/Wayfinder#Installation)  
+* [Integration](https://github.com/Teledyne-Marine/Wayfinder#Integration)  
 * [Requirements](https://github.com/Teledyne-Marine/Wayfinder#Requirements)  
 * [Usage](https://github.com/Teledyne-Marine/Wayfinder#Usage)  
 * [Links](https://github.com/Teledyne-Marine/Wayfinder#Links)  
@@ -32,6 +33,9 @@ Samples of how to use the driver can be found in the `examples` directory
 To install the `dvl` module, cd to the `dvl` directory and use `pip`
 
     $ pip install .
+
+## Integration
+Examples of code used for specific vehicle integration can be found in the `integration` directory
 
 ## Requirements
 

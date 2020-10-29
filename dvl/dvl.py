@@ -28,7 +28,7 @@ class Dvl():
         """Path to working folder where data will be stored."""
         self.log_file_name = None
         """Automatically generated file name when data logging starts."""
-        self.log_all_data = True
+        self.log_all_data = False
         """Flag to turn on logging of all data for debugging purposes."""
         self.time_diff = 0
         """Time different between system time and PC time."""
